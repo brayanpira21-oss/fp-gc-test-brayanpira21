@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Inventario - Proyecto Único</title>
+    <style>
+        /*  ESTILOS CSS - Diseño Limpio y Responsivo */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+
+        h1 {
+            color: #1c1c1e;
+            margin: 0;
+            font-size: 1.8em;
+        }
+
+        /* Estilo de Botones de Acción */
+        .accion-btn, .menu-btn {
+            padding: 10px 15px;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: background-color 0.2s;
+            margin-left: 10px;
+        }
+
+        /* Botón de Agregar Producto */
+        #btnAbrirFormulario {
+            background-color: #007aff; /* Azul de Apple */
+        }
+        #btnAbrirFormulario:hover {
+            background-color: #005bb5;
+        }
+
+        /* Menú de Opciones Superior Izquierda */
+        .menu-opciones {
+            position: relative;
+            display: inline-block;
+        }
+
+        .menu-contenido {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 10;
+            border-radius: 8px;
+            padding: 5px 0;
+            top: 45px; /* Ajuste debajo del botón */
+            left: 0;
+        }
+
+        .menu-contenido button {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            width: 100%;
+            text-align: left;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .menu-contenido button:hover {
+            background-color: #e0e0e0;
+        }
+
+        .menu-btn {
+            background-color: #8e8e93; /* Gris */
+        }
+        .menu-btn:hover {
+            background-color: #6d6d75;
+        }
+
+
+        /* Estilos de Tabla */
+        #tablaInventario {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden; /* Para que los bordes redondeados funcionen bien con la tabla */
+        }
+
+        #tablaInventario th, #tablaInventario td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        #tablaInventario thead th {
+            background-color: #f7f7f7;
+            font-weight: 600;
+            border-bottom: 2px solid #ccc;
+        }
+
+        #tablaInventario tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Estilos para la "Pestaña" Flotante (Overlay/Modal) */
+        .formulario-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Fondo semitransparente */
+            display: none; /* Controlado por JS */
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .formulario-contenido {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+            width: 90%;
+            max-width: 450px;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Estilos de Formulario */
+        #formProducto label {
+            display: block;
+            margin-top: 10px;
+            font-weight: 500;
+            color: #4a4a4a;
+        }
+
+        #formProducto input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+
+        #formProducto input:focus {
+            border-color: #007aff;
+            outline: none;
+        }
+
+        .form-botones {
+            margin-top: 25px;
+            display: flex;
+            justify-content: flex-end; /* Botones a la derecha */
+            gap: 10px;
+        }
+
+        .guardar-btn {
+            background-color: #34c759; /* Verde */
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .cancelar-btn {
+            background-color: #ff3b30; /* Rojo */
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        /* Estilos para los botones de la tabla */
+        .btn-tabla {
+            padding: 5px 10px;
+            margin: 0 3px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.2s;
+        }
+
+        .btn-tabla:active {
+            opacity: 0.8;
+        }
+
+        .btn-aumentar { background-color: #d8f1e0; color: #1c7c34; }
+        .btn-disminuir { background-color: #fce7e6; color: #cc0000; }
+        .btn-eliminar { background-color: #ffe0b2; color: #d35400; font-size: 0.8em;}
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Sistema de Gestión de Inventario</h1>
+        <div style="display: flex; align-items: center;">
+            <!-- Botón que despliega el Menú de Opciones (Superior Izquierda, como pediste) -->
+            <div class="menu-opciones" id="menuPrincipal">
+                <button class="menu-btn" onclick="toggleMenu()">⚙️ Menú de Opciones</button>
+                <div class="menu-contenido" id="menuDesplegable">
+                    <button onclick="mostrarAcercaDe()"> Acerca de</button>
+                    <button onclick="calcularValorTotal()">💲 Valor Total Inventario</button>
+                </div>
+            </div>
+
+            <!-- Botón de ACCIÓN principal: Agregar Nuevo Producto -->
+            <button id="btnAbrirFormulario" class="accion-btn">
+                 Agregar Nuevo Producto
+            </button>
+        </div>
+    </header>
+
+    <h2>Productos en Stock</h2>
+    <table id="tablaInventario">
+        <thead>
+        <tr>
+            <th style="width: 10%;">ID</th>
+            <th style="width: 35%;">Nombre</th>
+            <th style="width: 15%;">Cantidad</th>
+            <th style="width: 15%;">Precio Unitario</th>
+            <th style="width: 25%;">Acciones</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- Filas insertadas por JavaScript -->
+        </tbody>
+    </table>
+</div>
+
+<!-- Pestaña/Formulario Flotante (Overlay) para Agregar Producto -->
+<div id="formularioAgregar" class="formulario-overlay">
+    <div class="formulario-contenido">
+        <h2>📝 Agregar Producto (Menú)</h2>
+        <form id="formProducto">
+
+            <label for="idProducto">ID del Producto (Requisito):</label>
+            <input type="text" id="idProducto" required placeholder="Ej: P001">
+
+            <label for="nombreProducto">Nombre del Producto (Requisito):</label>
+            <input type="text" id="nombreProducto" required placeholder="Ej: Laptop Gamer">
+
+            <label for="cantidadProducto">Cantidad (Requisito):</label>
+            <input type="number" id="cantidadProducto" min="1" value="1" required>
+
+            <label for="precioProducto">Precio (USD) (Requisito):</label>
+            <input type="number" id="precioProducto" min="0.01" step="0.01" value="0.01" required>
+
+            <div class="form-botones">
+                <button type="button" id="btnCerrarFormulario" class="cancelar-btn">Cancelar</button>
+                <button type="submit" class="guardar-btn"> Guardar Producto</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    //  LÓGICA JAVASCRIPT INCLUIDA AQUÍ
+
+    // Estructura de Datos principal (List[Producto] como pide el documento)
+    // Usamos un array de objetos para almacenar ID, nombre, cantidad y precio.
+    let inventario = [
+        { id: 'LAP-101', nombre: 'Laptop Standard', cantidad: 5, precio: 800.00 },
+        { id: 'CEL-205', nombre: 'Smartphone Pro', cantidad: 12, precio: 450.50 }
+    ];
+
+    // Referencias a elementos del DOM
+    const btnAbrir = document.getElementById('btnAbrirFormulario');
+    const formularioOverlay = document.getElementById('formularioAgregar');
+    const btnCerrar = document.getElementById('btnCerrarFormulario');
+    const formProducto = document.getElementById('formProducto');
+    const tablaBody = document.querySelector('#tablaInventario tbody');
+    const menuDesplegable = document.getElementById('menuDesplegable');
+
+    // ------------------------------------------------------------
+    // 1. Lógica del Menú Desplegable Superior
+    // ------------------------------------------------------------
+
+    // Función para mostrar/ocultar el menú
+    function toggleMenu() {
+        if (menuDesplegable.style.display === 'block') {
+            menuDesplegable.style.display = 'none';
+        } else {
+            menuDesplegable.style.display = 'block';
+        }
+    }
+
+    // Cierra el menú si se hace clic fuera de él
+    window.onclick = function(event) {
+        if (!event.target.matches('.menu-btn')) {
+            if (menuDesplegable.style.display === 'block') {
+                menuDesplegable.style.display = 'none';
+            }
+        }
+    }
+
+    // Función "Acerca de" (Requisito del Documento)
+    function mostrarAcercaDe() {
+        alert(
+            "Acerca de: Sistema de Gestión de Inventario\n\n" +
+            "Integrantes: [Aquí pondrías los nombres de los integrantes]\n" +
+            "Roles: [Aquí pondrías los roles]\n" +
+            "Eslogan: [Aquí pondrías el eslogan]"
+        );
+    }
+
+    // Función para calcular el valor total (Requisito del Documento)
+    function calcularValorTotal() {
+        const valorTotal = inventario.reduce((acc, producto) => {
+            // Multiplica la cantidad por el precio y suma al acumulador
+            return acc + (producto.cantidad * parseFloat(producto.precio));
+        }, 0);
+
+        alert(`El Valor Total del Inventario es: $${valorTotal.toFixed(2)}`);
+    }
+
+
+    // ------------------------------------------------------------
+    // 2. Lógica del Formulario (Agregar y Desplegar)
+    // ------------------------------------------------------------
+
+    // Muestra el formulario (el menú que se despliega)
+    btnAbrir.addEventListener('click', () => {
+        formularioOverlay.style.display = 'flex';
+    });
+
+    // Cierra el formulario
+    btnCerrar.addEventListener('click', () => {
+        formularioOverlay.style.display = 'none';
+        formProducto.reset();
+    });
+
+    // Manejo del envío del formulario (Guardar Producto)
+    formProducto.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const nuevoProducto = {
+            id: document.getElementById('idProducto').value.toUpperCase().trim(),
+            nombre: document.getElementById('nombreProducto').value.trim(),
+            cantidad: parseInt(document.getElementById('cantidadProducto').value),
+            // Asegura que el precio sea un float y se fije a 2 decimales
+            precio: parseFloat(document.getElementById('precioProducto').value).toFixed(2)
+        };
+
+        // Validación de ID duplicado (Requisito del Documento)
+        const idExiste = inventario.some(p => p.id === nuevoProducto.id);
+        if (idExiste) {
+            alert(`Error: El ID de producto "${nuevoProducto.id}" ya existe. Use un ID único.`);
+            return;
+        }
+
+        inventario.push(nuevoProducto);
+        renderizarTabla(); // Actualiza la tabla en tiempo real
+
+        // Cierra y limpia
+        formularioOverlay.style.display = 'none';
+        formProducto.reset();
+    });
+
+    // ------------------------------------------------------------
+    // 3. Lógica para Renderizar la Tabla y Botones de Cantidad
+    // ------------------------------------------------------------
+
+    function renderizarTabla() {
+        tablaBody.innerHTML = ''; // Limpia el contenido actual de la tabla
+
+        inventario.forEach((producto) => {
+            const fila = tablaBody.insertRow();
+
+            // ID y Nombre
+            fila.insertCell().textContent = producto.id;
+            fila.insertCell().textContent = producto.nombre;
+
+            // Cantidad (Celda para interacción en tiempo real)
+            const celdaCantidad = fila.insertCell();
+            celdaCantidad.id = `cantidad-${producto.id}`;
+            celdaCantidad.textContent = producto.cantidad;
+
+            // Precio
+            fila.insertCell().textContent = `$${producto.precio}`;
+
+            // Acciones (Botones +, -, Eliminar)
+            const celdaAcciones = fila.insertCell();
+
+            // Botón Disminuir
+            const btnDisminuir = document.createElement('button');
+            btnDisminuir.textContent = '–';
+            btnDisminuir.className = 'btn-tabla btn-disminuir';
+            btnDisminuir.addEventListener('click', () => actualizarCantidad(producto.id, -1));
+            celdaAcciones.appendChild(btnDisminuir);
+
+            // Botón Aumentar
+            const btnAumentar = document.createElement('button');
+            btnAumentar.textContent = '+';
+            btnAumentar.className = 'btn-tabla btn-aumentar';
+            btnAumentar.addEventListener('click', () => actualizarCantidad(producto.id, 1));
+            celdaAcciones.appendChild(btnAumentar);
+
+            // Botón Eliminar Producto (Funcionalidad extra)
+            const btnEliminar = document.createElement('button');
+            btnEliminar.textContent = 'Eliminar';
+            btnEliminar.className = 'btn-tabla btn-eliminar';
+            btnEliminar.addEventListener('click', () => eliminarProducto(producto.id));
+            celdaAcciones.appendChild(btnEliminar);
+        });
+    }
+
+    // ------------------------------------------------------------
+    // 4. Funciones de Interacción en Tiempo Real
+    // ------------------------------------------------------------
+
+    function actualizarCantidad(idProducto, cambio) {
+        const producto = inventario.find(p => p.id === idProducto);
+
+        if (producto) {
+            const nuevaCantidad = producto.cantidad + cambio;
+
+            // Evitar cantidades negativas
+            if (nuevaCantidad >= 0) {
+                producto.cantidad = nuevaCantidad;
+
+                // Actualizar solo la celda en el DOM (Interacción en tiempo real)
+                const celdaDOM = document.getElementById(`cantidad-${producto.id}`);
+                if (celdaDOM) {
+                    celdaDOM.textContent = producto.cantidad;
+                }
+            } else {
+                // Usamos alert como alternativa simple a un modal de error
+                alert("¡Error! La cantidad en stock no puede ser menor a cero.");
+            }
+        }
+    }
+
+    function eliminarProducto(idProducto) {
+        // Usamos confirm para la eliminación (alternativa a un modal de confirmación)
+        if (confirm(`¿Está seguro de que desea eliminar el producto con ID: ${idProducto}?`)) {
+            // Filtra el array, manteniendo solo los productos cuyo ID no coincide
+            inventario = inventario.filter(p => p.id !== idProducto);
+            renderizarTabla(); // Vuelve a dibujar la tabla para reflejar el cambio
+        }
+    }
+
+
+    // Inicializar la tabla al cargar la página con los productos de ejemplo
+    renderizarTabla();
+</script>
+
+</body>
+</html>
